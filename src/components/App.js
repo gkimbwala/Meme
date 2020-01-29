@@ -1,9 +1,96 @@
+
 import React, { Component } from 'react';
-import logo from '../logo.png';
+import Web3 from 'web3';
 import './App.css';
+import Meme from '../abis/Meme.json'
+
+const ipfsClient = require('ipfs-http-client') //const ipfs = ipfsClient('http://localhost:5001') // (the default in Node.js)
+const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
+
 
 class App extends Component {
-  render() {
+
+  async componentWillMount() {
+    await this.loadWeb3()
+    await this.loadBlockchainData()
+  }
+
+ async loadWeb3() {
+//loads web3
+    if (window.ethereum) {
+      window.web3 = new Web3(window.ethereum)
+      await window.ethereum.enable()
+    }
+    else if (window.web3) {
+      window.web3 = new Web3(window.web3.currentProvider)
+    }
+    else {
+      window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
+    }
+  }
+
+   async loadBlockchainData() {
+    const web3 = window.web3
+    // Load account
+    const accounts = await web3.eth.getAccounts()
+    this.setState({ account: accounts[0] })
+    const networkId = await web3.eth.net.getId()
+    const networkData = Meme.networks[networkId]
+    if(networkData) {
+      const contract = web3.eth.Contract(Meme.abi, networkData.address)
+      this.setState({ contract })
+      const memeHash = await contract.methods.get().call()
+      this.setState({ memeHash })
+    } else {
+      window.alert('Smart contract not deployed to detected network.')
+    }
+  }
+
+
+constructor(props) {
+  super(props);
+  this.state = {
+    account: null,
+    buffer: null,
+    contract: null,
+    memeHash: 'QmV3A9Fo1qz2f8a7amMQoQjzh97mrKNDpBM5LiNkp1qu4E'
+  };
+}
+
+//handles file loader events
+  captureFile =(event) => {
+    event.preventDefault()
+    console.log('file captured...')// prints current behavoir to the form
+    //process file for ipfs
+    const file =event.target.files[0]//fetches file from the event.
+    const reader = new window.FileReader()//FileReader comes with Project. Allows for converting to a buffer.
+    reader.readAsArrayBuffer(file)
+    reader.onloadend = () => {
+      this.setState({buffer: Buffer(reader.result)})// convertered to what needs to be sent to IPFS
+      console.log('buffer', this.state.buffer)
+    }
+  }
+
+  // handles submit events
+  // EX. hash: QmV3A9Fo1qz2f8a7amMQoQjzh97mrKNDpBM5LiNkp1qu4E
+  //Example URL: https://ipfs.infura.io/ipfs/QmV3A9Fo1qz2f8a7amMQoQjzh97mrKNDpBM5LiNkp1qu4E
+    onSubmit = (event) => {
+    event.preventDefault()
+    console.log("Submitting file to ipfs...")
+    ipfs.add(this.state.buffer, (error, result) => {// adds the image to ipfs
+      console.log('Ipfs result', result)//prints out UPFS results
+      if(error) {
+        console.error(error)//prints out error
+        return
+      }
+      //Step 2: stores a file on blockchain
+       this.state.contract.methods.set(result[0].hash).send({ from: this.state.account }).then((r) => {
+         return this.setState({ memeHash: result[0].hash })
+       })
+    })
+  }
+
+   render() {
     return (
       <div>
         <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -13,7 +100,7 @@ class App extends Component {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Dapp University
+            Shule
           </a>
         </nav>
         <div className="container-fluid mt-5">
@@ -25,20 +112,14 @@ class App extends Component {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <img src={logo} className="App-logo" alt="logo" />
+                  <img src={`https://ipfs.infura.io/ipfs/${this.state.memeHash}`} />
                 </a>
-                <h1>Dapp University Starter Kit</h1>
-                <p>
-                  Edit <code>src/components/App.js</code> and save to reload.
-                </p>
-                <a
-                  className="App-link"
-                  href="http://www.dappuniversity.com/bootcamp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  LEARN BLOCKCHAIN <u><b>NOW! </b></u>
-                </a>
+                <p>&nbsp;</p>
+                <h2>Upload your certficate</h2>
+                <form onSubmit={this.onSubmit} >
+                  <input type='file' onChange={this.captureFile} />
+                  <input type='submit' />
+                </form>
               </div>
             </main>
           </div>
