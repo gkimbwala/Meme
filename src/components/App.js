@@ -1,12 +1,14 @@
 
 import React, { Component } from 'react';
 import Web3 from 'web3';
-import './App.css';
+import './App.css'
 import Meme from '../abis/Meme.json'
+
 
 const ipfsClient = require('ipfs-http-client') //const ipfs = ipfsClient('http://localhost:5001') // (the default in Node.js)
 const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
-
+const EthCrypto = require('eth-crypto')/**used for encryption from source: https://www.npmjs.com/package/eth-crypto*/
+const identity = EthCrypto.createIdentity()
 
 class App extends Component {
 
@@ -36,7 +38,7 @@ class App extends Component {
     this.setState({ account: accounts[0] })
     const networkId = await web3.eth.net.getId()
     const networkData = Meme.networks[networkId]
-    if(networkData) {
+   if(networkData) {
       const contract = web3.eth.Contract(Meme.abi, networkData.address)
       this.setState({ contract })
       const memeHash = await contract.methods.get().call()
@@ -46,16 +48,37 @@ class App extends Component {
     }
   }
 
-
 constructor(props) {
   super(props);
   this.state = {
     account: null,
     buffer: null,
     contract: null,
-    memeHash: 'QmV3A9Fo1qz2f8a7amMQoQjzh97mrKNDpBM5LiNkp1qu4E'
+    memeHash: '',
+    identity:''
   };
 }
+
+//digital signature
+console.log(identity);
+/* > {
+    address: '0x3f243FdacE01Cfd9719f7359c94BA11361f32471',
+    privateKey: '0x107be946709e41b7895eea9f2dacf998a0a9124acbb786f0fd1a826101581a07',
+    publicKey: 'bf1cc3154424dc22191941d9f4f50b063a2b663a2337e5548abea633c1d06ece...'
+} */
+
+
+
+//multisig encrytion
+
+//mulitsig decryption
+//digital signature verification
+
+//EXTRA: list certificates
+//EZTRA: list Signers
+
+
+
 
 //handles file loader events
   captureFile =(event) => {
