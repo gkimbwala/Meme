@@ -7,8 +7,6 @@ import Meme from '../abis/Meme.json'
 
 const ipfsClient = require('ipfs-http-client') //const ipfs = ipfsClient('http://localhost:5001') // (the default in Node.js)
 const ipfs = ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' }) // leaving out the arguments will default to these values
-const EthCrypto = require('eth-crypto')/**used for encryption from source: https://www.npmjs.com/package/eth-crypto*/
-const identity = EthCrypto.createIdentity()
 
 class App extends Component {
 
@@ -54,20 +52,17 @@ constructor(props) {
     account: null,
     buffer: null,
     contract: null,
-    memeHash: '',
-    identity:''
+    memeHash: 'QmX5CYcDCZwn4qed5rzGAept6G1fgwZAvdkNgXRN6BN3Sr'
   };
 }
 
 //digital signature
-console.log(identity);
+
 /* > {
     address: '0x3f243FdacE01Cfd9719f7359c94BA11361f32471',
     privateKey: '0x107be946709e41b7895eea9f2dacf998a0a9124acbb786f0fd1a826101581a07',
     publicKey: 'bf1cc3154424dc22191941d9f4f50b063a2b663a2337e5548abea633c1d06ece...'
 } */
-
-
 
 //multisig encrytion
 
@@ -130,8 +125,8 @@ console.log(identity);
           <div className="row">
             <main role="main" className="col-lg-12 d-flex text-center">
               <div className="content mr-auto ml-auto">
-                <a
-                  href="http://www.dappuniversity.com/bootcamp"
+                <a 
+                  href="https://ipfs.infura.io/ipfs/QmX5CYcDCZwn4qed5rzGAept6G1fgwZAvdkNgXRN6BN3Sr"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
